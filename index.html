@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOLOSAFE - Smart Solo Travel Planner</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+  body {
+    background: linear-gradient(to right, #f0f4f8, #d9e2ec);
+  }
+  .nav-button:hover {
+    background-color: #ffffffaa;
+    color: #1e3a8a;
+  }
+
+  /* Mock map styling */
+  #mockMap {
+    width: 100%;
+    height: 400px;
+    background: url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080') no-repeat center center;
+    background-size: cover;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  /* Marker styling */
+  .marker {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .marker:hover {
+    transform: scale(1.4);
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+  }
+  .safe { background-color: #22c55e; }   /* Green safe zone */
+  .risky { background-color: #ef4444; }  /* Red risky zone */
+</style>
+</head>
+<body class="font-sans">
+
+<!-- Header -->
+<header class="bg-blue-600 text-white p-6 flex justify-between items-center shadow-lg">
+  <h1 class="text-2xl font-bold">SOLOSAFE</h1>
+  <nav class="space-x-2">
+    <button onclick="showSection('home')" class="nav-button px-4 py-2 rounded text-white font-semibold">Home</button>
+    <button onclick="showSection('planner')" class="nav-button px-4 py-2 rounded text-white font-semibold">Plan Trip</button>
+    <button onclick="showSection('safety')" class="nav-button px-4 py-2 rounded text-white font-semibold">Safety Map</button>
+    <button onclick="showSection('organizer')" class="nav-button px-4 py-2 rounded text-white font-semibold">Travel Organizer</button>
+    <button onclick="showSection('emergency')" class="nav-button px-4 py-2 rounded text-white font-semibold">Emergency</button>
+  </nav>
+</header>
+
+<main class="p-6 max-w-5xl mx-auto">
+
+  <!-- Home Section -->
+  <section id="home" class="my-6">
+    <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col md:flex-row items-center gap-6">
+      <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400" alt="Solo Travel" class="rounded-lg w-full md:w-1/2">
+      <div>
+        <h2 class="text-2xl font-bold mb-2 text-blue-600">Welcome to SOLOSAFE</h2>
+        <p class="mb-2 text-gray-700">Plan your solo trips safely with AI-powered itinerary, safety scores, and emergency support. Travel smart, travel safe!</p>
+        <button onclick="showSection('planner')" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"><i class="fas fa-map"></i> Plan Your Trip</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Planner Section -->
+  <section id="planner" class="my-6 hidden">
+    <h2 class="text-xl font-bold mb-4 text-blue-600"><i class="fas fa-route"></i> AI Smart Itinerary Generator</h2>
+    <div class="space-y-3 max-w-md">
+      <input type="text" id="destination" placeholder="Destination" class="w-full p-3 border rounded shadow">
+      <input type="number" id="budget" placeholder="Budget (USD)" class="w-full p-3 border rounded shadow">
+      <input type="date" id="startDate" class="w-full p-3 border rounded shadow">
+      <input type="date" id="endDate" class="w-full p-3 border rounded shadow">
+      <select id="preference" class="w-full p-3 border rounded shadow">
+        <option value="adventure">Adventure</option>
+        <option value="calm">Calm/Relax</option>
+        <option value="nightlife">Nightlife</option>
+      </select>
+      <button onclick="generateItinerary()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-semibold">Generate Itinerary</button>
+    </div>
+    <div id="itineraryResult" class="mt-4 p-4 bg-white rounded shadow"></div>
+  </section>
+
+  <!-- Safety Map Section -->
+  <section id="safety" class="my-6 hidden">
+    <h2 class="text-xl font-bold mb-4 text-blue-600"><i class="fas fa-shield-alt"></i> Safety Score Map</h2>
+    <div id="mockMap">
+      <!-- Safe and Risky markers on beach-themed map -->
+      <div class="marker safe" style="top: 15%; left: 20%;" data-name="Goa Beach" data-score="9/10" data-tip="Great beach, low crime."></div>
+      <div class="marker risky" style="top: 40%; left: 50%;" data-name="Mumbai Beach" data-score="5/10" data-tip="Crowded area, watch belongings."></div>
+      <div class="marker safe" style="top: 60%; left: 30%;" data-name="Kerala Beach" data-score="8/10" data-tip="Peaceful and safe area."></div>
+      <div class="marker risky" style="top: 25%; left: 70%;" data-name="Chennai Beach" data-score="4/10" data-tip="Avoid late nights."></div>
+      <div class="marker safe" style="top: 75%; left: 60%;" data-name="Andaman Beach" data-score="9/10" data-tip="Remote, very safe."></div>
+
+      <!-- Popup card -->
+      <div id="markerPopup" class="absolute bg-white p-3 rounded-lg shadow-lg hidden z-10 w-60">
+        <h3 class="font-bold text-blue-600" id="popupName"></h3>
+        <p><strong>Safety Score:</strong> <span id="popupScore"></span></p>
+        <p><strong>Tip:</strong> <span id="popupTip"></span></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Travel Organizer Hub -->
+  <section id="organizer" class="my-6 hidden">
+    <h2 class="text-xl font-bold mb-4 text-blue-600"><i class="fas fa-folder-open"></i> Travel Organizer Hub</h2>
+    <div class="space-y-3">
+      <input type="text" id="bookingName" placeholder="Booking Name" class="w-full p-3 border rounded shadow">
+      <input type="date" id="bookingDate" class="w-full p-3 border rounded shadow">
+      <button onclick="addBooking()" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Add Booking</button>
+    </div>
+    <h3 class="mt-4 font-semibold text-blue-600">Your Trip Timeline</h3>
+    <div id="timeline" class="mt-2 space-y-2"></div>
+  </section>
+
+  <!-- Emergency Section -->
+  <section id="emergency" class="my-6 hidden">
+    <h2 class="text-xl font-bold mb-4 text-blue-600"><i class="fas fa-ambulance"></i> Emergency Support</h2>
+    <button onclick="sendSOS()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 mb-2"><i class="fas fa-siren-on"></i> Send SOS</button>
+    <ul class="list-disc pl-5 text-gray-700">
+      <li>Local Police: 100</li>
+      <li>Ambulance: 101</li>
+      <li>Embassy Contact: +1234567890</li>
+    </ul>
+  </section>
+
+</main>
+
+<script>
+// Section toggle
+function showSection(sectionId) {
+  document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
+  document.getElementById(sectionId).classList.remove('hidden');
+}
+
+// Mock AI itinerary generator
+function generateItinerary() {
+  const dest = document.getElementById('destination').value;
+  const budget = document.getElementById('budget').value;
+  const start = document.getElementById('startDate').value;
+  const end = document.getElementById('endDate').value;
+  const pref = document.getElementById('preference').value;
+
+  if (!dest || !budget || !start || !end) {
+    alert('Please fill all fields!');
+    return;
+  }
+
+  const result = `
+    <h3 class="font-semibold text-blue-600">Trip to ${dest}</h3>
+    <p>Budget: $${budget}</p>
+    <p>Dates: ${start} to ${end}</p>
+    <p>Preference: ${pref}</p>
+    <p>Recommended safe area: Downtown SafeZone</p>
+    <p>Sample itinerary:</p>
+    <ul class="list-disc pl-5">
+      <li>Day 1: City tour</li>
+      <li>Day 2: Adventure activity</li>
+      <li>Day 3: Local cuisine & relaxation</li>
+    </ul>
+  `;
+  document.getElementById('itineraryResult').innerHTML = result;
+}
+
+// Mock SOS
+function sendSOS() {
+  alert("SOS sent! Your location is shared with authorities.");
+}
+
+// Safety Map Marker Popup
+const markers = document.querySelectorAll('#mockMap .marker');
+const popup = document.getElementById('markerPopup');
+const popupName = document.getElementById('popupName');
+const popupScore = document.getElementById('popupScore');
+const popupTip = document.getElementById('popupTip');
+
+markers.forEach(marker => {
+  marker.addEventListener('click', (e) => {
+    popupName.textContent = marker.dataset.name;
+    popupScore.textContent = marker.dataset.score;
+    popupTip.textContent = marker.dataset.tip;
+
+    popup.style.top = (marker.offsetTop - 100) + "px";
+    popup.style.left = (marker.offsetLeft + 20) + "px";
+    popup.classList.remove('hidden');
+  });
+});
+
+// Hide popup if clicked outside markers
+document.getElementById('mockMap').addEventListener('click', (e) => {
+  if (!e.target.classList.contains('marker')) {
+    popup.classList.add('hidden');
+  }
+});
+
+// Travel Organizer functions
+function addBooking() {
+  const name = document.getElementById('bookingName').value;
+  const date = document.getElementById('bookingDate').value;
+
+  if (!name || !date) {
+    alert("Please fill booking name and date!");
+    return;
+  }
+
+  const timeline = document.getElementById('timeline');
+  const card = document.createElement('div');
+  card.className = "p-3 bg-white rounded shadow";
+  card.innerHTML = `<strong>${name}</strong> - ${date}`;
+  timeline.appendChild(card);
+
+  // Clear inputs
+  document.getElementById('bookingName').value = '';
+  document.getElementById('bookingDate').value = '';
+}
+</script>
+
+</body>
+</html>
